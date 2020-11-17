@@ -3,29 +3,22 @@ package dog.shebang
 import scala.util.parsing.combinator.JavaTokenParsers
 
 object Parser extends JavaTokenParsers {
-  def expr: Parser[Int] = (term ~ rep(secondary_operator ~ term)) ^^ {
-    case fact ~ list => list.foldLeft(fact) { (res, elem) =>
-      elem match {
-        case "+" ~ fact => res + fact
-        case "-" ~ fact => res - fact
-      }
+  def expr: Parser[AST] = (term ~ rep(secondary_operator ~ term)) ^^ {
+    case value ~ Nil => value
+    case t ~ rest => rest.foldLeft(t) {
+      case (l, op ~ r) => Node(op, Seq(l, r))
     }
   }
 
-  def term: Parser[Int] = (factor ~ rep(primary_operator ~ factor)) ^^ {
-    case num ~ list => list.foldLeft(num) { (res, elem) =>
-      elem match {
-        case "*" ~ num => res * num
-        case "/" ~ num => res / num
-      }
+  def term: Parser[AST] = factor ~ rep(primary_operator ~ factor) ^^ {
+    case fact ~ Nil => fact
+    case fact ~ rest => rest.foldLeft(fact) {
+      case (l, op ~ r) => Node(op, Seq(l, r))
     }
   }
 
-  def factor: Parser[Int] = wholeNumber ^^ {
-    _.toInt
-  } | "(" ~ expr ~ ")" ^^ {
+  def factor: Parser[AST] = wholeNumber ^^ (num => Number(num.toDouble)) | "(" ~ expr ~ ")" ^^ {
     case "(" ~ num ~ ")" => num
-    case _ => ???
   }
 
   def primary_operator: Parser[String] = "*" | "/"
