@@ -11,6 +11,10 @@ object AST {
 
   case class Line(value: Expression) extends Statement
 
+  case class Print(value: Expression) extends Statement
+
+  case class Println(value: Expression) extends Statement
+
   case object None extends Statement
 
   sealed abstract class Expression extends Node

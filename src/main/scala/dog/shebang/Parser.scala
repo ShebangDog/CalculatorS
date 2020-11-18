@@ -17,7 +17,13 @@ object Parser extends JavaTokenParsers {
       SymbolMap.declareIdent(id, exp)
 
       Declare(id, exp)
-  } | expr ^^ Line
+  } |
+    "print" ~ "(" ~ expr ~ ")" ^^ {
+      case _ ~ _ ~ exp ~ _ => AST.Print(exp)
+    } |
+    "println" ~ "(" ~ expr ~ ")" ^^ {
+      case _ ~ _ ~ exp ~ _ => AST.Println(exp)
+    } | expr ^^ Line
 
   def expr: Parser[Expression] = (term ~ rep(secondary_operator ~ term)) ^^ {
     case value ~ Nil => value

@@ -5,10 +5,12 @@ import dog.shebang.Parser.program
 
 object Calculator {
 
-  def emit(statement: Statement): String = statement match {
+  def emit(statement: Statement): Unit = statement match {
     case AST.Declare(ident, value) => "declare " + ident + " as " + eval(value)
-    case AST.Line(value) => eval(value).toString
-    case AST.None => ""
+    case AST.Print(value) => print(eval(value))
+    case AST.Println(value) => println(eval(value))
+    case AST.Line(value) => eval(value)
+    case AST.None => "None"
   }
 
   def eval(expr: Expression): Double = expr match {
@@ -29,9 +31,10 @@ object Calculator {
         | val ident = (22 + 33) * 2
         | 1 + 1 + ident
         |
-        | """.stripMargin).get.foreach(statement =>
-      println(emit(statement))
-    )
+        | print(ident)
+        |
+        | """.stripMargin).get
+      .foreach(emit)
   }
 
 }
