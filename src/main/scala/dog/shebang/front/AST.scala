@@ -1,4 +1,4 @@
-package dog.shebang
+package dog.shebang.front
 
 object AST {
 

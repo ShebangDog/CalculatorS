@@ -1,11 +1,10 @@
-package dog.shebang
+package dog.shebang.front
 
-import dog.shebang.AST.{Arithmetic, Expression, Statement}
-import dog.shebang.Parser.program
+import dog.shebang.front.Parser.program
 
 object Calculator {
 
-  def emit(statement: Statement): Unit = statement match {
+  def emit(statement: AST.Statement): Unit = statement match {
     case AST.Declare(ident, value, t) => eval(value)
     case AST.Print(value) => print(eval(value).makeString())
     case AST.Println(value) => println(eval(value).makeString())
@@ -13,9 +12,9 @@ object Calculator {
     case AST.None => "None"
   }
 
-  def eval(expr: Expression): AST.Number = expr match {
+  def eval(expr: AST.Expression): AST.Number = expr match {
     case number: AST.Number => number
-    case arithmetic: Arithmetic => arithmetic match {
+    case arithmetic: AST.Arithmetic => arithmetic match {
       case AST.Addition(left, right) => eval(left) + eval(right)
       case AST.Subtraction(left, right) => eval(left) - eval(right)
       case AST.Multiplication(left, right) => eval(left) * eval(right)
