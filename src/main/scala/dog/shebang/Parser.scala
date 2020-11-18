@@ -37,7 +37,12 @@ object Parser extends JavaTokenParsers {
 
   def factor: Parser[Expression] = wholeNumber ^^ (num => Number(num.toDouble)) | "(" ~ expr ~ ")" ^^ {
     case "(" ~ num ~ ")" => num
-  }``
+  } | ident ^^ { id =>
+    SymbolMap.getIdent(id) match {
+      case Some(value) => value
+      case _ => ???
+    }
+  }
 
   def primary_operator: Parser[String] = "*" | "/"
 

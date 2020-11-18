@@ -27,7 +27,7 @@ object Calculator {
         |
         |
         | val ident = (22 + 33) * 2
-        | 1 + 1
+        | 1 + 1 + ident
         |
         | """.stripMargin).get.foreach(statement =>
       println(emit(statement))
