@@ -5,25 +5,18 @@ import dog.shebang.AST.{Addition, Declare, Division, Expression, Line, Multiplic
 import scala.util.parsing.combinator.JavaTokenParsers
 
 object Parser extends JavaTokenParsers {
-  def program: Parser[List[Statement]] = rep(statement ~ rep("""\n""")) ^^ {
-    program =>
-      program.foldRight(List(AST.None): List[Statement]) {
-        case (line ~ _, res) => line :: res
-      }
+  def program: Parser[List[Statement]] = rep(statement ~ rep("""\n""")) ^^ { program =>
+    program.foldRight(List(AST.None): List[Statement]) { case (line ~ _, res) => line :: res }
   }
 
   def statement: Parser[Statement] = "val" ~ ident ~ "=" ~ expr ^^ {
     case _ ~ id ~ _ ~ exp =>
       SymbolMap.declareIdent(id, exp)
-
       Declare(id, exp)
   } |
-    "print" ~ "(" ~ expr ~ ")" ^^ {
-      case _ ~ _ ~ exp ~ _ => AST.Print(exp)
-    } |
-    "println" ~ "(" ~ expr ~ ")" ^^ {
-      case _ ~ _ ~ exp ~ _ => AST.Println(exp)
-    } | expr ^^ Line
+    "print" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Print(exp) } |
+    "println" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Println(exp) } |
+    expr ^^ Line
 
   def expr: Parser[Expression] = (term ~ rep(secondary_operator ~ term)) ^^ {
     case value ~ Nil => value
@@ -41,14 +34,14 @@ object Parser extends JavaTokenParsers {
     }
   }
 
-  def factor: Parser[Expression] = wholeNumber ^^ (num => Number(num.toDouble)) | "(" ~ expr ~ ")" ^^ {
-    case "(" ~ num ~ ")" => num
-  } | ident ^^ { id =>
-    SymbolMap.getIdent(id) match {
-      case Some(value) => value
-      case _ => ???
+  def factor: Parser[Expression] = wholeNumber ^^ (num => Number(num.toDouble)) |
+    "(" ~ expr ~ ")" ^^ { case "(" ~ num ~ ")" => num } |
+    ident ^^ { id =>
+      SymbolMap.getIdent(id) match {
+        case Some(value) => value
+        case _ => ???
+      }
     }
-  }
 
   def primary_operator: Parser[String] = "*" | "/"
 
