@@ -7,7 +7,7 @@ object AST {
 
   sealed abstract class Statement extends Node
 
-  case class Declare(ident: String, value: Expression) extends Statement
+  case class Declare(ident: String, value: Expression, typeInfo: Type) extends Statement
 
   case class Line(value: Expression) extends Statement
 
@@ -17,10 +17,70 @@ object AST {
 
   case object None extends Statement
 
+
   sealed abstract class Expression extends Node
 
-  case class Number(value: Double) extends Expression
 
+  sealed abstract class Number extends Expression {
+
+    def +(other: Number): Number
+
+    def -(other: Number): Number
+
+    def *(other: Number): Number
+
+    def /(other: Number): Number
+
+    def makeString(): String
+  }
+
+  case class IntNumber(value: Int) extends Number {
+    override def +(other: Number): Number = other match {
+      case IntNumber(int) => IntNumber(value + int)
+      case DoubleNumber(double) => DoubleNumber(value + double)
+    }
+
+    override def -(other: Number): Number = other match {
+      case IntNumber(int) => IntNumber(value - int)
+      case DoubleNumber(double) => DoubleNumber(value - double)
+    }
+
+    override def *(other: Number): Number = other match {
+      case IntNumber(int) => IntNumber(value * int)
+      case DoubleNumber(double) => DoubleNumber(value * double)
+    }
+
+    override def /(other: Number): Number = other match {
+      case IntNumber(int) => IntNumber(value / int)
+      case DoubleNumber(double) => DoubleNumber(value / double)
+    }
+
+    override def makeString(): String = value.toString
+  }
+
+  case class DoubleNumber(value: Double) extends Number {
+    override def +(other: Number): Number = other match {
+      case IntNumber(int) => DoubleNumber(value + int)
+      case DoubleNumber(double) => DoubleNumber(value + double)
+    }
+
+    override def -(other: Number): Number = other match {
+      case IntNumber(int) => DoubleNumber(value - int)
+      case DoubleNumber(double) => DoubleNumber(value - double)
+    }
+
+    override def *(other: Number): Number = other match {
+      case IntNumber(int) => DoubleNumber(value * int)
+      case DoubleNumber(double) => DoubleNumber(value * double)
+    }
+
+    override def /(other: Number): Number = other match {
+      case IntNumber(int) => DoubleNumber(value / int)
+      case DoubleNumber(double) => DoubleNumber(value / double)
+    }
+
+    override def makeString(): String = value.toString
+  }
 
   sealed abstract class Arithmetic(val operator: String) extends Expression
 
@@ -31,5 +91,12 @@ object AST {
   case class Multiplication(left: Expression, right: Expression) extends Arithmetic("*")
 
   case class Division(left: Expression, right: Expression) extends Arithmetic("/")
+
+
+  sealed abstract class Type(val typeName: String) extends Node
+
+  case object Int extends Type("Int")
+
+  case object Double extends Type("Double")
 
 }

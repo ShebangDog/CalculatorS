@@ -6,15 +6,15 @@ import dog.shebang.Parser.program
 object Calculator {
 
   def emit(statement: Statement): Unit = statement match {
-    case AST.Declare(ident, value) => "declare " + ident + " as " + eval(value)
-    case AST.Print(value) => print(eval(value))
-    case AST.Println(value) => println(eval(value))
+    case AST.Declare(ident, value, t) => eval(value)
+    case AST.Print(value) => print(eval(value).makeString())
+    case AST.Println(value) => println(eval(value).makeString())
     case AST.Line(value) => eval(value)
     case AST.None => "None"
   }
 
-  def eval(expr: Expression): Double = expr match {
-    case AST.Number(value) => value
+  def eval(expr: Expression): AST.Number = expr match {
+    case number: AST.Number => number
     case arithmetic: Arithmetic => arithmetic match {
       case AST.Addition(left, right) => eval(left) + eval(right)
       case AST.Subtraction(left, right) => eval(left) - eval(right)
@@ -28,7 +28,7 @@ object Calculator {
       """
         |
         |
-        | val ident = (22 + 33) * 2
+        | val ident: Int = (22 + 33) * 2
         | 1 + 1 + ident
         |
         | print(ident)

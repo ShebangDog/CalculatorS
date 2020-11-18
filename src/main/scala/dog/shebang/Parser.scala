@@ -1,6 +1,6 @@
 package dog.shebang
 
-import dog.shebang.AST.{Addition, Declare, Division, Expression, Line, Multiplication, Number, Statement, Subtraction}
+import dog.shebang.AST.{Addition, Declare, Division, DoubleNumber, Expression, Int, IntNumber, Line, Multiplication, Number, Statement, Subtraction}
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
@@ -9,10 +9,10 @@ object Parser extends JavaTokenParsers {
     program.foldRight(List(AST.None): List[Statement]) { case (line ~ _, res) => line :: res }
   }
 
-  def statement: Parser[Statement] = "val" ~ ident ~ "=" ~ expr ^^ {
-    case _ ~ id ~ _ ~ exp =>
+  def statement: Parser[Statement] = "val" ~ ident ~ ":" ~ type_info ~ "=" ~ expr ^^ {
+    case _ ~ id ~ _ ~ t ~ _ ~ exp =>
       SymbolMap.declareIdent(id, exp)
-      Declare(id, exp)
+      Declare(id, exp, t)
   } |
     "print" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Print(exp) } |
     "println" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Println(exp) } |
@@ -34,7 +34,8 @@ object Parser extends JavaTokenParsers {
     }
   }
 
-  def factor: Parser[Expression] = wholeNumber ^^ (num => Number(num.toDouble)) |
+  def factor: Parser[Expression] = wholeNumber ^^ (num => IntNumber(num.toInt)) |
+    floatingPointNumber ^^ (floatNum => DoubleNumber(floatNum.toDouble)) |
     "(" ~ expr ~ ")" ^^ { case "(" ~ num ~ ")" => num } |
     ident ^^ { id =>
       SymbolMap.getIdent(id) match {
@@ -42,6 +43,12 @@ object Parser extends JavaTokenParsers {
         case _ => ???
       }
     }
+
+  def type_info: Parser[AST.Type] = ident ^^ {
+    case AST.Int.typeName => AST.Int
+    case AST.Double.typeName => AST.Double
+    case _ => ???
+  }
 
   def primary_operator: Parser[String] = "*" | "/"
 
