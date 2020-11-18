@@ -1,25 +1,43 @@
 package dog.shebang
 
+import dog.shebang.AST.{Addition, Declare, Division, Expression, Line, Multiplication, Number, Statement, Subtraction}
+
 import scala.util.parsing.combinator.JavaTokenParsers
 
 object Parser extends JavaTokenParsers {
-  def expr: Parser[AST] = (term ~ rep(secondary_operator ~ term)) ^^ {
+  def program: Parser[List[Statement]] = rep(statement ~ rep("""\n""")) ^^ {
+    program =>
+      program.foldRight(List(AST.None): List[Statement]) {
+        case (line ~ _, res) => line :: res
+      }
+  }
+
+  def statement: Parser[Statement] = "val" ~ ident ~ "=" ~ expr ^^ {
+    case _ ~ id ~ _ ~ exp =>
+      SymbolMap.declareIdent(id, exp)
+
+      Declare(id, exp)
+  } | expr ^^ Line
+
+  def expr: Parser[Expression] = (term ~ rep(secondary_operator ~ term)) ^^ {
     case value ~ Nil => value
     case t ~ rest => rest.foldLeft(t) {
-      case (l, op ~ r) => Node(op, Seq(l, r))
+      case (l, "+" ~ r) => Addition(l, r)
+      case (l, "-" ~ r) => Subtraction(l, r)
     }
   }
 
-  def term: Parser[AST] = factor ~ rep(primary_operator ~ factor) ^^ {
+  def term: Parser[Expression] = factor ~ rep(primary_operator ~ factor) ^^ {
     case fact ~ Nil => fact
     case fact ~ rest => rest.foldLeft(fact) {
-      case (l, op ~ r) => Node(op, Seq(l, r))
+      case (l, "*" ~ r) => Multiplication(l, r)
+      case (l, "/" ~ r) => Division(l, r)
     }
   }
 
-  def factor: Parser[AST] = wholeNumber ^^ (num => Number(num.toDouble)) | "(" ~ expr ~ ")" ^^ {
+  def factor: Parser[Expression] = wholeNumber ^^ (num => Number(num.toDouble)) | "(" ~ expr ~ ")" ^^ {
     case "(" ~ num ~ ")" => num
-  }
+  }``
 
   def primary_operator: Parser[String] = "*" | "/"
 

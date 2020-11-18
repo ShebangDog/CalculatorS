@@ -1,19 +1,37 @@
 package dog.shebang
 
-import dog.shebang.Parser.expr
+import dog.shebang.AST.{Arithmetic, Expression, Statement}
+import dog.shebang.Parser.program
 
 object Calculator {
 
-  def eval(ast: AST): Double = ast match {
-    case Number(value) => value
-    case Node("+", Seq(l, r)) => eval(l) + eval(r)
-    case Node("-", Seq(l, r)) => eval(l) - eval(r)
-    case Node("*", Seq(l, r)) => eval(l) * eval(r)
-    case Node("/", Seq(l, r)) => eval(l) / eval(r)
+  def emit(statement: Statement): String = statement match {
+    case AST.Declare(ident, value) => "declare " + ident + " as " + eval(value)
+    case AST.Line(value) => eval(value).toString
+    case AST.None => ""
+  }
+
+  def eval(expr: Expression): Double = expr match {
+    case AST.Number(value) => value
+    case arithmetic: Arithmetic => arithmetic match {
+      case AST.Addition(left, right) => eval(left) + eval(right)
+      case AST.Subtraction(left, right) => eval(left) - eval(right)
+      case AST.Multiplication(left, right) => eval(left) * eval(right)
+      case AST.Division(left, right) => eval(left) / eval(right)
+    }
   }
 
   def main(args: Array[String]): Unit = {
-    println(eval(Parser.parseAll(expr, """(22 + 33) * 2""").get))
+    Parser.parseAll(program,
+      """
+        |
+        |
+        | val ident = (22 + 33) * 2
+        | 1 + 1
+        |
+        | """.stripMargin).get.foreach(statement =>
+      println(emit(statement))
+    )
   }
 
 }
