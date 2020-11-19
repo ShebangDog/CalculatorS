@@ -34,8 +34,10 @@ object Parser extends JavaTokenParsers {
     }
   }
 
-  def factor: Parser[AST.Expression] = wholeNumber ^^ (num => AST.IntNumber(num.toInt)) |
-    floatingPointNumber ^^ (floatNum => AST.DoubleNumber(floatNum.toDouble)) |
+  def factor: Parser[AST.Expression] = floatingPointNumber ^^ { numberString =>
+    if (numberString.contains('.')) AST.DoubleNumber(numberString.toDouble)
+    else AST.IntNumber(numberString.toInt)
+  } |
     "(" ~ expr ~ ")" ^^ { case "(" ~ num ~ ")" => num } |
     ident ^^ { id =>
       SymbolMap.getIdent(id) match {
@@ -53,5 +55,4 @@ object Parser extends JavaTokenParsers {
   def primary_operator: Parser[String] = "*" | "/"
 
   def secondary_operator: Parser[String] = "+" | "-"
-
 }
