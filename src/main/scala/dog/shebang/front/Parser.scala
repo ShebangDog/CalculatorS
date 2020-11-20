@@ -15,10 +15,10 @@ object Parser extends JavaTokenParsers {
       SymbolMap.declareValue(id, exp)
       AST.ValueDeclare(id, exp, t)
   } |
-    "print" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Print(exp) } |
-    "println" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Println(exp) } |
-    "fun" ~ ident ~ "(" ~ opt(parameters) ~ ")" ~ ":" ~ type_info ~ "=" ~ body ^^ {
-      case _ ~ funcId ~ _ ~ optionParameters ~ _ ~ _ ~ t ~ _ ~ body =>
+    "print" ~ "(" ~> expr <~ ")" ^^ (exp => AST.Print(exp)) |
+    "println" ~ "(" ~> expr <~ ")" ^^ (exp => AST.Println(exp)) |
+    ("fun" ~> ident <~ "(") ~ (opt(parameters) <~ ")" ~ ":") ~ (type_info <~ "=") ~ body ^^ {
+      case funcId ~ optionParameters ~ t ~ body =>
         optionParameters.map(parameters => {
           val parameterIds = parameters.map(_._1)
           val function = AST.Function(parameterIds, body)
@@ -33,9 +33,9 @@ object Parser extends JavaTokenParsers {
     case param ~ paramList => param :: paramList
   }
 
-  def parameter: Parser[(String, AST.Type)] = ident ~ ":" ~ type_info ^^ { case id ~ _ ~ t => (id, t) }
+  def parameter: Parser[(String, AST.Type)] = (ident <~ ":") ~ type_info ^^ { case id ~ t => (id, t) }
 
-  def body: Parser[List[AST.Expression]] = "{" ~ rep(rep("""\n""") ~> expr <~ rep("""\n""")) ~ "}" ^^ { case _ ~ exprList ~ _ => exprList }
+  def body: Parser[List[AST.Expression]] = "{" ~> rep(rep("""\n""") ~> expr <~ rep("""\n""")) <~ "}" ^^ (exprList => exprList)
 
   def expr: Parser[AST.Expression] = (term ~ rep(secondary_operator ~ term)) ^^ {
     case value ~ Nil => value
@@ -57,12 +57,10 @@ object Parser extends JavaTokenParsers {
     if (numberString.contains('.')) AST.DoubleNumber(numberString.toDouble)
     else AST.IntNumber(numberString.toInt)
   } |
-    "(" ~ expr ~ ")" ^^ { case "(" ~ num ~ ")" => num } |
-    ident ~ "(" ~ opt(arguments) ~ ")" ^^ {
-      case functionName ~ _ ~ Some(arguments) ~ _ =>
-        val function = SymbolMap.function(functionName)
-
-        function.map {
+    "(" ~> expr <~ ")" ^^ (num => num) |
+    (ident <~ "(") ~ (opt(arguments) <~ ")") ^^ {
+      case id ~ Some(arguments) =>
+        SymbolMap.function(id).map {
           case AST.Function(argumentIds, body) =>
             (argumentIds zip arguments).foreach { case (id, exp) => SymbolMap.declareValue(id, exp) }
 
