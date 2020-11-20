@@ -20,10 +20,6 @@ object SemanticAnalyzer {
       AST.None
 
     case AST.FunctionDeclare(ident, _, _, typeInfo, body) =>
-      typeCheck(typeInfo, evalAsType(body)) match {
-        case Some(_) =>
-        case None => semanticError(ident, typeInfo)
-      }
       AST.None
   }
 

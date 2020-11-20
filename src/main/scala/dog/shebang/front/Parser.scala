@@ -11,7 +11,9 @@ object Parser extends JavaTokenParsers {
   }
 
   def statement: Parser[AST.Statement] = "val" ~ ident ~ ":" ~ type_info ~ "=" ~ expr ^^ {
-    case _ ~ id ~ _ ~ t ~ _ ~ exp => AST.ValueDeclare(id, exp, t)
+    case _ ~ id ~ _ ~ t ~ _ ~ exp =>
+      SymbolMap.declareValue(id, exp)
+      AST.ValueDeclare(id, exp, t)
   } |
     "print" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Print(exp) } |
     "println" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Println(exp) } |
