@@ -6,6 +6,7 @@ import dog.shebang.table.SymbolMap
 object SemanticAnalyzer {
   def analyze(statement: AST.Statement): AST.Statement = statement match {
     case declare: AST.Declare => analyze(declare)
+    case AST.FunctionCall(_, _) => SymbolMap.function()
     case AST.Line(_) => AST.None
     case AST.Print(_) => statement
     case AST.Println(_) => statement
@@ -34,6 +35,6 @@ object SemanticAnalyzer {
     case AST.Int => if (typeRight == AST.Double) None else Option(typeRight)
     case AST.Double => Option(typeRight)
   }
-
+2
   private def semanticError(ident: String, incorrectType: AST.Type): Unit = println(ident + " is not " + incorrectType.typeName)
 }
