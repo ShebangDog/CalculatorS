@@ -7,7 +7,11 @@ object AST {
 
   sealed abstract class Statement extends Node
 
-  case class Declare(ident: String, value: Expression, typeInfo: Type) extends Statement
+  sealed abstract class Declare(val id: String) extends Statement
+
+  case class ValueDeclare(valueName: String, value: Expression, typeInfo: Type) extends Declare(valueName)
+
+  case class FunctionDeclare(functionName: String, argumentName: String, argumentType: AST.Type, typeInfo: AST.Type, body: Expression) extends Declare(functionName)
 
   case class Line(value: Expression) extends Statement
 
@@ -19,6 +23,8 @@ object AST {
 
 
   sealed abstract class Expression extends Node
+
+  case class Function(argumentName: String, argumentType: AST.Type, functionType: AST.Type, expression: Expression) extends Expression
 
 
   sealed abstract class Number extends Expression {

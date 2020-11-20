@@ -10,4 +10,9 @@ object Evaluator {
       case AST.Division(left, right) => eval(left) / eval(right)
     }
   }
+
+  def evalAsType(expr: AST.Expression): AST.Type = eval(expr) match {
+    case AST.IntNumber(_) => AST.Int
+    case AST.DoubleNumber(_) => AST.Double
+  }
 }

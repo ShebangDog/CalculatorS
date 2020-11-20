@@ -1,5 +1,6 @@
 package dog.shebang.front
 
+import dog.shebang.front.AST.FunctionDeclare
 import dog.shebang.table.SymbolMap
 
 import scala.util.parsing.combinator.JavaTokenParsers
@@ -10,13 +11,18 @@ object Parser extends JavaTokenParsers {
   }
 
   def statement: Parser[AST.Statement] = "val" ~ ident ~ ":" ~ type_info ~ "=" ~ expr ^^ {
-    case _ ~ id ~ _ ~ t ~ _ ~ exp =>
-      SymbolMap.declareIdent(id, exp)
-      AST.Declare(id, exp, t)
+    case _ ~ id ~ _ ~ t ~ _ ~ exp => AST.ValueDeclare(id, exp, t)
   } |
     "print" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Print(exp) } |
     "println" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Println(exp) } |
+    "fun" ~ ident ~ "(" ~ ident ~ ":" ~ type_info ~ ")" ~ ":" ~ type_info ~ "=" ~ body ^^ {
+      case _ ~ funcId ~ _ ~ argId ~ _ ~ argType ~ _ ~ _ ~ t ~ _ ~ body => FunctionDeclare(funcId, argId, argType, t, body)
+    } |
     expr ^^ AST.Line
+
+  def body: Parser[AST.Expression] = "{" ~ expr ~ "}" ^^ {
+    case _ ~ exp ~ _ => exp
+  }
 
   def expr: Parser[AST.Expression] = (term ~ rep(secondary_operator ~ term)) ^^ {
     case value ~ Nil => value
@@ -40,7 +46,7 @@ object Parser extends JavaTokenParsers {
   } |
     "(" ~ expr ~ ")" ^^ { case "(" ~ num ~ ")" => num } |
     ident ^^ { id =>
-      SymbolMap.getIdent(id) match {
+      SymbolMap.getValueIdent(id) match {
         case Some(value) => value
         case _ => ???
       }

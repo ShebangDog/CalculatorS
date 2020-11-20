@@ -1,6 +1,7 @@
 package dog.shebang.front
 
-import dog.shebang.front.Evaluator.eval
+import dog.shebang.front.Evaluator.evalAsType
+import dog.shebang.table.SymbolMap
 
 object SemanticAnalyzer {
   def analyze(statement: AST.Statement): AST.Statement = statement match {
@@ -12,23 +13,27 @@ object SemanticAnalyzer {
   }
 
   private def analyze(declare: AST.Declare): AST.Statement = declare match {
-    case AST.Declare(_, value, t) => eval(value) match {
-      case AST.IntNumber(_) => t match {
-        case AST.Int => AST.None
-        case _ =>
-          semanticError(declare, t)
-          AST.None
+    case AST.ValueDeclare(ident, value, t) =>
+      val result = typeCheck(t, evalAsType(value))
+
+      result.foreach(_ => SymbolMap.declareValue(ident, value))
+      AST.None
+
+    case AST.FunctionDeclare(ident, argumentIdent, argumentType, typeInfo, body) =>
+      val result = typeCheck(typeInfo, evalAsType(body))
+      val function = AST.Function(argumentIdent, argumentType, typeInfo, body)
+
+      result match {
+        case Some(_) => SymbolMap.declareFunction(ident, function)
+        case None => semanticError(ident, typeInfo)
       }
-      case AST.DoubleNumber(_) => t match {
-        case AST.Double => AST.None
-        case _ =>
-          semanticError(declare, t)
-          AST.None
-      }
-    }
+      AST.None
   }
 
-  private def semanticError(declare: AST.Declare, incorrectType: AST.Type): Unit = declare match {
-    case AST.Declare(ident, _, _) => println(ident + " is not " + incorrectType.typeName)
+  private def typeCheck(typeLeft: AST.Type, typeRight: AST.Type): Option[AST.Type] = typeLeft match {
+    case AST.Int => if (typeRight == AST.Double) None else Option(typeRight)
+    case AST.Double => Option(typeRight)
   }
+
+  private def semanticError(ident: String, incorrectType: AST.Type): Unit = println(ident + " is not " + incorrectType.typeName)
 }
