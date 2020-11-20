@@ -11,7 +11,7 @@ object AST {
 
   case class ValueDeclare(valueName: String, value: Expression, typeInfo: Type) extends Declare(valueName)
 
-  case class FunctionDeclare(functionName: String, argumentName: String, argumentType: AST.Type, typeInfo: AST.Type, body: Expression) extends Declare(functionName)
+  case class FunctionDeclare(functionName: String, argumentList: List[(String, AST.Type)], typeInfo: AST.Type, body: List[Expression]) extends Declare(functionName)
 
   case class Line(value: Expression) extends Statement
 
@@ -24,7 +24,7 @@ object AST {
 
   sealed abstract class Expression extends Node
 
-  case class Function(argumentId: String, expression: Expression) extends Expression
+  case class Function(argumentIdList: List[String], expression: List[Expression]) extends Expression
 
   case class Value(ident: String) extends Expression
 

@@ -19,7 +19,7 @@ object SemanticAnalyzer {
       }
       AST.None
 
-    case AST.FunctionDeclare(ident, _, _, typeInfo, body) =>
+    case AST.FunctionDeclare(functionName, argumentList, typeInfo, body) =>
       AST.None
   }
 

@@ -17,18 +17,25 @@ object Parser extends JavaTokenParsers {
   } |
     "print" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Print(exp) } |
     "println" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Println(exp) } |
-    "fun" ~ ident ~ "(" ~ ident ~ ":" ~ type_info ~ ")" ~ ":" ~ type_info ~ "=" ~ body ^^ {
-      case _ ~ funcId ~ _ ~ argId ~ _ ~ argType ~ _ ~ _ ~ t ~ _ ~ body =>
-        val function = AST.Function(argId, body)
+    "fun" ~ ident ~ "(" ~ opt(parameters) ~ ")" ~ ":" ~ type_info ~ "=" ~ body ^^ {
+      case _ ~ funcId ~ _ ~ optionParameters ~ _ ~ _ ~ t ~ _ ~ body =>
+        optionParameters.map(parameters => {
+          val parameterIds = parameters.map(_._1)
+          val function = AST.Function(parameterIds, body)
 
-        SymbolMap.declareFunction(funcId, function)
-        FunctionDeclare(funcId, argId, argType, t, body)
+          SymbolMap.declareFunction(funcId, function)
+          FunctionDeclare(funcId, parameters, t, body)
+        }).get
     } |
     expr ^^ AST.Line
 
-  def body: Parser[AST.Expression] = "{" ~ expr ~ "}" ^^ {
-    case _ ~ exp ~ _ => exp
+  def parameters: Parser[List[(String, AST.Type)]] = parameter ~ rep("," ~> parameter) ^^ {
+    case param ~ paramList => param :: paramList
   }
+
+  def parameter: Parser[(String, AST.Type)] = ident ~ ":" ~ type_info ^^ { case id ~ _ ~ t => (id, t) }
+
+  def body: Parser[List[AST.Expression]] = "{" ~ rep(rep("""\n""") ~> expr <~ rep("""\n""")) ~ "}" ^^ { case _ ~ exprList ~ _ => exprList }
 
   def expr: Parser[AST.Expression] = (term ~ rep(secondary_operator ~ term)) ^^ {
     case value ~ Nil => value
@@ -51,17 +58,24 @@ object Parser extends JavaTokenParsers {
     else AST.IntNumber(numberString.toInt)
   } |
     "(" ~ expr ~ ")" ^^ { case "(" ~ num ~ ")" => num } |
-    ident ~ "(" ~ expr ~ ")" ^^ {
-      case functionName ~ _ ~ argument ~ _ =>
+    ident ~ "(" ~ opt(arguments) ~ ")" ^^ {
+      case functionName ~ _ ~ Some(arguments) ~ _ =>
         val function = SymbolMap.function(functionName)
 
         function.map {
-          case AST.Function(argId, body) =>
-            SymbolMap.declareValue(argId, argument)
-            Evaluator.eval(AST.Function(argId, body))
+          case AST.Function(argumentIds, body) =>
+            (argumentIds zip arguments).foreach { case (id, exp) => SymbolMap.declareValue(id, exp) }
+
+            Evaluator.eval(AST.Function(argumentIds, body))
         }.get
     } |
     ident ^^ AST.Value
+
+  def arguments: Parser[List[AST.Expression]] = argument ~ rep("," ~> argument) ^^ {
+    case argument ~ argumentList => argument :: argumentList
+  }
+
+  def argument: Parser[AST.Expression] = expr
 
   def type_info: Parser[AST.Type] = ident ^^ {
     case AST.Int.typeName => AST.Int

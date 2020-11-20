@@ -7,11 +7,13 @@ object Calculator {
   def main(args: Array[String]): Unit = {
     Parser.parseAll(program,
       """
-        | fun function(value: Int): Int = { value + hoge }
+        | fun function(value: Int, hoge: Int): Int = {
+        |   value + hoge
+        |   value
+        |   1212
+        | }
         |
-        | val hoge:Int = 1
-        |
-        | print(hoge + 222 + function(111))
+        | print(hoge + 222 + function(111, 121))
         |
         | """.stripMargin).get
       .map(SemanticAnalyzer.analyze)

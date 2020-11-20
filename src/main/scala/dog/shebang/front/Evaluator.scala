@@ -6,7 +6,7 @@ object Evaluator {
   def eval(expr: AST.Expression): AST.Number = expr match {
     case number: AST.Number => number
     case AST.Value(id) => SymbolMap.value(id).get
-    case function: AST.Function => eval(function.expression)
+    case function: AST.Function => eval(function.expression.last)
     case arithmetic: AST.Arithmetic => arithmetic match {
       case AST.Addition(left, right) => eval(left) + eval(right)
       case AST.Subtraction(left, right) => eval(left) - eval(right)
