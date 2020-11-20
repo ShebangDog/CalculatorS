@@ -24,8 +24,9 @@ object AST {
 
   sealed abstract class Expression extends Node
 
-  case class Function(argumentName: String, argumentType: AST.Type, functionType: AST.Type, expression: Expression) extends Expression
+  case class Function(argumentId: String, expression: Expression) extends Expression
 
+  case class Value(ident: String) extends Expression
 
   sealed abstract class Number extends Expression {
 

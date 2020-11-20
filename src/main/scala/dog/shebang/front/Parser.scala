@@ -16,7 +16,11 @@ object Parser extends JavaTokenParsers {
     "print" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Print(exp) } |
     "println" ~ "(" ~ expr ~ ")" ^^ { case _ ~ _ ~ exp ~ _ => AST.Println(exp) } |
     "fun" ~ ident ~ "(" ~ ident ~ ":" ~ type_info ~ ")" ~ ":" ~ type_info ~ "=" ~ body ^^ {
-      case _ ~ funcId ~ _ ~ argId ~ _ ~ argType ~ _ ~ _ ~ t ~ _ ~ body => FunctionDeclare(funcId, argId, argType, t, body)
+      case _ ~ funcId ~ _ ~ argId ~ _ ~ argType ~ _ ~ _ ~ t ~ _ ~ body =>
+        val function = AST.Function(argId, body)
+
+        SymbolMap.declareFunction(funcId, function)
+        FunctionDeclare(funcId, argId, argType, t, body)
     } |
     expr ^^ AST.Line
 
@@ -45,12 +49,17 @@ object Parser extends JavaTokenParsers {
     else AST.IntNumber(numberString.toInt)
   } |
     "(" ~ expr ~ ")" ^^ { case "(" ~ num ~ ")" => num } |
-    ident ^^ { id =>
-      SymbolMap.getValueIdent(id) match {
-        case Some(value) => value
-        case _ => ???
-      }
-    }
+    ident ~ "(" ~ expr ~ ")" ^^ {
+      case functionName ~ _ ~ argument ~ _ =>
+        val function = SymbolMap.function(functionName)
+
+        function.map {
+          case AST.Function(argId, body) =>
+            SymbolMap.declareValue(argId, argument)
+            Evaluator.eval(AST.Function(argId, body))
+        }.get
+    } |
+    ident ^^ AST.Value
 
   def type_info: Parser[AST.Type] = ident ^^ {
     case AST.Int.typeName => AST.Int

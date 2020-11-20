@@ -7,9 +7,9 @@ object Calculator {
   def main(args: Array[String]): Unit = {
     Parser.parseAll(program,
       """
-        | fun function(value: Int): Int = { 1 }
+        | fun function(value: Int): Int = { value }
         |
-        | function(1)
+        | print(function(100 + 222))
         |
         | """.stripMargin).get
       .map(SemanticAnalyzer.analyze)

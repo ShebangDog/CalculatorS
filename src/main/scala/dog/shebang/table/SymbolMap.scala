@@ -16,6 +16,6 @@ object SymbolMap {
     case number: AST.Number => number
   }
 
-  def function(ident: String, argumentType: AST.Type, argument: AST.Expression): Option[AST.Expression] = hashMap.get(ident)
+  def function(ident: String): Option[AST.Expression] = hashMap.get(ident)
 
 }
